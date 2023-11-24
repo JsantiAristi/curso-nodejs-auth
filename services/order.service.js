@@ -8,7 +8,16 @@ class OrderService {
   }
 
   async create(data) {
-    const newOrder = await models.Order.create(data);
+    const customer = await models.Customer.findOne({
+      where: {
+        '$user.id$': data.userId
+      },
+      include: ['user']
+    })
+    if (!customer) {
+      throw boom.badRequest('Customer not found');
+    }
+    const newOrder = await models.Order.create({ customerId: customer.id });
     return newOrder;
   }
 
@@ -32,6 +41,24 @@ class OrderService {
       ]
     });
     return order;
+  }
+
+  async findByUser(userId){
+    //Se trabaja con sequalize
+    const orders = await models.Order.findAll({
+      //Buscamos en la tabla customer, el usuario por id.
+      where: {
+        '$customer.user.id$': userId
+      },
+      include: [
+        {
+          association: 'customer',
+          include: ['user']
+        }
+      ]
+    })
+    //Nos traemos las ordenes de ese usuario
+    return orders;
   }
 
   async update(id, changes) {

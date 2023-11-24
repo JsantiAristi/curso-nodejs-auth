@@ -1,4 +1,5 @@
 const express = require('express');
+const passport = require('passport');
 
 const OrderService = require('../services/order.service');
 const validatorHandler = require('../middlewares/validator.handler');
@@ -49,6 +50,22 @@ router.post(
       res.status(201).json(newItem);
     } catch (error) {
       next(error);
+    }
+  }
+);
+
+// POST
+router.post('/',
+  passport.authenticate('jwt', { session: false }),
+  async (req, res, next) => {
+    try {
+      const body = {
+        userId: req.user.sub
+      }
+      const newOrder = await service.create(body);
+      res.status(201).json(newOrder);
+    } catch (err) {
+      next(err);
     }
   }
 );
